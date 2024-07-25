@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:alpine3.20
+    environment:
+      POSTGRES_USER: exacta
+      POSTGRES_PASSWORD: "r00t"
+      POSTGRES_DB: exactabank
+    ports:
+      - "5432:5432"
+    volumes:
+      - exactabank:/database/var/lib/postgresql/data
+    networks:
+      - postgresql-network
+
+networks:
+  postgresql-network:
+    driver: bridge
+
+volumes:
+  exactabank:
