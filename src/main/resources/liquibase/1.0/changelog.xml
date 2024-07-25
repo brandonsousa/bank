@@ -113,4 +113,81 @@
             <column name="ID_CONTA_DESTINO"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="remove_unique_chave_chanve_pix" author="brandonsousa">
+        <dropUniqueConstraint tableName="CHAVE_PIX" constraintName="chave_pix_chave_key"/>
+
+        <rollback>
+            <addUniqueConstraint tableName="CHAVE_PIX" columnNames="CHAVE" constraintName="chave_pix_chave_key"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cria_index_chave_chave_pix" author="brandonsousa">
+        <addUniqueConstraint tableName="chave_pix" columnNames="chave" constraintName="UK_CHAVE_PIX_CHAVE"/>
+    </changeSet>
+
+    <changeSet id="renomeia_index_chave_pix" author="brandonsousa">
+        <sql>
+            ALTER
+            INDEX uk_chave_pix_chave RENAME TO ix_chave_pix_chave;
+
+            ALTER
+            INDEX uk_id_conta_tp_chave RENAME TO ix_chave_pix_id_conta_tp_chave;
+        </sql>
+
+        <rollback>
+            <sql>
+                ALTER
+                INDEX ix_chave_pix_chave RENAME TO uk_chave_pix_chave;
+
+                ALTER
+                INDEX ix_chave_pix_id_conta_tp_chave RENAME TO uk_id_conta_tp_chave;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="adiciona_novo_index_id_conta_chave_pix" author="brandonsousa">
+        <createIndex tableName="CHAVE_PIX" indexName="IX_CHAVE_PIX_ID_CONTA" unique="true">
+            <column name="ID_CONTA"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="exclui_e_renomeia_index_conta" author="brandonsousa">
+        <dropIndex tableName="conta" indexName="ix_conta_nr_conta"/>
+        <dropIndex tableName="conta" indexName="ix_conta_documento"/>
+        <sql>
+            ALTER
+            INDEX conta_conta_key RENAME TO ix_conta_conta;
+            ALTER
+            INDEX conta_documento_key RENAME TO ix_conta_documento;
+        </sql>
+
+        <rollback>
+            <sql>
+                ALTER
+                INDEX ix_conta_conta RENAME TO conta_conta_key;
+
+                ALTER
+                INDEX ix_conta_documento RENAME TO conta_documento_key;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cria_sequencia_para_conta_conta" author="brandonsousa">
+        <createSequence sequenceName="SEQ_CONTA_CONTA" startValue="1" incrementBy="1"/>
+    </changeSet>
+
+    <changeSet id="atribui_seq_conta_conta" author="brandonsousa">
+        <sql>
+            ALTER TABLE conta
+                ALTER COLUMN conta SET DEFAULT nextval('SEQ_CONTA_CONTA');
+        </sql>
+
+        <rollback>
+            <sql>
+                ALTER TABLE conta
+                ALTER COLUMN conta DROP DEFAULT;
+            </sql>
+        </rollback>
+    </changeSet>
 </databaseChangeLog>
