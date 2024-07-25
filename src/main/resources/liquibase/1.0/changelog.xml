@@ -1,0 +1,116 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+    <changeSet id="cria_tabela_conta" author="brandonsousa">
+        <createTable tableName="CONTA" remarks="Conta">
+            <column name="ID" type="UNIQUEIDENTIFIER" valueComputed="NEWID()" remarks="ID da conta">
+                <constraints primaryKey="true" primaryKeyName="PK_ID_CONTA"/>
+            </column>
+            <column name="NOME" type="VARCHAR(255)" remarks="Nome do titular da conta">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DOCUMENTO" type="VARCHAR(11)" remarks="CPF/CNPJ do titular da conta">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="SALDO" type="DECIMAL(10,2)" remarks="Saldo da conta">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CONTA" type="INTEGER(6)" remarks="Número da conta">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="DT_CRIACAO" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP"
+                    remarks="Data de criação da conta">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DT_ATUALIZACAO" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP"
+                    remarks="Data de atualização da conta">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="cria_index_conta_e_cpf_tabela_conta" author="brandonsousa">
+        <createIndex tableName="CONTA" indexName="IX_CONTA_NR_CONTA" unique="true">
+            <column name="CONTA"/>
+        </createIndex>
+
+        <createIndex tableName="CONTA" indexName="IX_CONTA_DOCUMENTO" unique="true">
+            <column name="DOCUMENTO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="cria_tabela_chave_pix" author="brandonsousa">
+        <createTable tableName="CHAVE_PIX" remarks="Chaves pix da conta">
+            <column name="ID" type="UNIQUEIDENTIFIER" remarks="ID da chave pix">
+                <constraints primaryKey="true" primaryKeyName="PK_ID_CHAVE_PIX"/>
+            </column>
+            <column name="ID_CONTA" type="UNIQUEIDENTIFIER" remarks="ID da conta">
+                <constraints nullable="false" references="CONTA(ID)" foreignKeyName="FK_CONTA_CHAVE_PIX_ID_CONTA"/>
+            </column>
+            <column name="TP_CHAVE" type="VARCHAR(9)" remarks="Tipo da chave pix">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CHAVE" type="VARCHAR(254)" remarks="Chave pix">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="DT_CRIACAO" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP"
+                    remarks="Data de criação da chave pix">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint tableName="CHAVE_PIX" columnNames="ID_CONTA, TP_CHAVE"
+                             constraintName="UK_ID_CONTA_TP_CHAVE"/>
+    </changeSet>
+
+    <changeSet id="cria_tabela_transacao" author="brandonsousa">
+        <createTable tableName="TRANSACAO">
+            <column name="ID" type="UNIQUEIDENTIFIER" valueComputed="NEWID()" remarks="ID da transação">
+                <constraints primaryKey="true" primaryKeyName="PK_ID_CONTA_TRANSACAO"/>
+            </column>
+            <column name="ID_CONTA_ORIGEM" type="UNIQUEIDENTIFIER" remarks="ID da conta de origem">
+                <constraints nullable="true" references="CONTA(ID)"
+                             foreignKeyName="FK_TRANSACAO_ID_CONTA_ORIGEM"/>
+            </column>
+            <column name="ID_CHAVE_PIX_DESTINO" type="UNIQUEIDENTIFIER" remarks="ID da chave pix">
+                <constraints nullable="true" references="CHAVE_PIX(ID)"
+                             foreignKeyName="FK_CHAVE_PIX_TRANSACAO_ID_CHAVE_PIX"/>
+            </column>
+            <column name="ID_CONTA_DESTINO" type="UNIQUEIDENTIFIER" remarks="ID da conta destino">
+                <constraints nullable="true" references="CONTA(ID)"
+                             foreignKeyName="FK_TRANSACAO_ID_CONTA_DESTINO"/>
+            </column>
+            <column name="TP_TRANSACAO" type="VARCHAR(8)" remarks="Tipo da transação">
+                <constraints nullable="false"/>
+            </column>
+            <column name="VL_TRANSACAO" type="DECIMAL(10,2)" remarks="Valor da transação">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRICAO" type="VARCHAR(255)" remarks="Descrição da transação"/>
+            <column name="DT_CRIAÇÃO" type="TIMESTAMP" defaultValueDate="CURRENT_TIMESTAMP"
+                    remarks="Data de criação da transação">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="cria_index_id_conta_origem_tabela_transacao" author="brandonsousa">
+        <createIndex tableName="TRANSACAO" indexName="IX_TRANSACAO_ID_CONTA_ORIGEM">
+            <column name="ID_CONTA_ORIGEM"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="cria_index_id_chave_pix_destino_tabela_transacao" author="brandonsousa">
+        <createIndex tableName="TRANSACAO" indexName="IX_TRANSACAO_ID_CHAVE_PIX_DESTINO">
+            <column name="ID_CHAVE_PIX_DESTINO"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="cria_index_id_conta_destino_tabela_transacao" author="brandonsousa">
+        <createIndex tableName="TRANSACAO" indexName="IX_TRANSACAO_ID_CONTA_DESTINO">
+            <column name="ID_CONTA_DESTINO"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
