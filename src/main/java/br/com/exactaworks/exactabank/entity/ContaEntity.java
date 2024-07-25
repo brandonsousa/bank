@@ -1,12 +1,10 @@
 package br.com.exactaworks.exactabank.entity;
 
+import br.com.exactaworks.exactabank.dvo.DocumentoDVO;
 import br.com.exactaworks.exactabank.entity.abstracts.AbstractEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,6 +14,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Table(name = "conta", indexes = {
@@ -37,12 +37,26 @@ public class ContaEntity extends AbstractEntity {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal saldo;
 
-    @Column(nullable = false)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "conta_conta_seq")
-    @SequenceGenerator(name = "conta_conta_seq", sequenceName = "seq_conta_conta", allocationSize = 1)
+    @Column(nullable = false, unique = true)
     private Integer conta;
 
     @Column(name = "dt_atualizacao", nullable = false)
     @UpdateTimestamp
     private LocalDateTime dtAtualizacao;
+
+    public static ContaEntity create(String name, DocumentoDVO document, Integer accountNumber) {
+        Objects.requireNonNull(name, "Nome não pode ser nulo");
+        Objects.requireNonNull(document, "Documento não pode ser nulo");
+        Objects.requireNonNull(accountNumber, "Conta não pode ser nulo");
+
+        if (name.isBlank()) throw new IllegalArgumentException("Nome não pode ser vazio");
+
+        return ContaEntity.builder()
+                .id(UUID.randomUUID())
+                .nome(name)
+                .documento(document.value())
+                .saldo(BigDecimal.ZERO)
+                .conta(accountNumber)
+                .build();
+    }
 }

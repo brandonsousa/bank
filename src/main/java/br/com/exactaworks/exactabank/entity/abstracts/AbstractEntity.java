@@ -26,7 +26,6 @@ public abstract class AbstractEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-
     @Column(name = "DT_CRIACAO", nullable = false)
     @CreationTimestamp
     private LocalDateTime dtCriacao;
