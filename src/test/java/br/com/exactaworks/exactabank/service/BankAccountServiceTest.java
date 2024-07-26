@@ -2,6 +2,7 @@ package br.com.exactaworks.exactabank.service;
 
 import br.com.exactaworks.exactabank.entity.ContaEntity;
 import br.com.exactaworks.exactabank.exception.BadRequestException;
+import br.com.exactaworks.exactabank.exception.NotFoundException;
 import br.com.exactaworks.exactabank.repository.BankAccountRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,72 +58,123 @@ class BankAccountServiceTest {
                 assertEquals(document, bankAccount.getDocumento());
                 assertEquals(account, bankAccount.getConta());
             }
+        }
 
-            @Nested
-            @DisplayName("Fail to store bank account")
-            class Fail {
-                @Test
-                @DisplayName("Should throw NullPointerException when name is null")
-                void shouldThrowNullPointerExceptionWhenNameIsNull() {
-                    NullPointerException exception = assertThrows(NullPointerException.class,
-                            () -> service.store(null, "83923422083"));
+        @Nested
+        @DisplayName("Fail to store bank account")
+        class Fail {
+            @Test
+            @DisplayName("Should throw NullPointerException when name is null")
+            void shouldThrowNullPointerExceptionWhenNameIsNull() {
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.store(null, "83923422083"));
 
-                    String expectedMessage = "Nome não pode ser nulo";
+                String expectedMessage = "Nome não pode ser nulo";
 
-                    String actualMessage = exception.getMessage();
+                String actualMessage = exception.getMessage();
 
-                    assertEquals(expectedMessage, actualMessage);
-                }
+                assertEquals(expectedMessage, actualMessage);
+            }
 
-                @Test
-                @DisplayName("Should throw NullPointerException when document is null")
-                void shouldThrowNullPointerExceptionWhenDocumentIsNull() {
-                    NullPointerException exception = assertThrows(NullPointerException.class,
-                            () -> service.store("Nome", null));
+            @Test
+            @DisplayName("Should throw NullPointerException when document is null")
+            void shouldThrowNullPointerExceptionWhenDocumentIsNull() {
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.store("Nome", null));
 
-                    String expectedMessage = "Documento não pode ser nulo";
+                String expectedMessage = "Documento não pode ser nulo";
 
-                    String actualMessage = exception.getMessage();
+                String actualMessage = exception.getMessage();
 
-                    assertEquals(expectedMessage, actualMessage);
-                }
+                assertEquals(expectedMessage, actualMessage);
+            }
 
-                @Test
-                @DisplayName("Should throw BadRequestException when bank account already exists")
-                void shouldThrowBadRequestExceptionWhenBankAccountAlreadyExists() {
-                    String name = "Nome";
-                    String document = "83923422083";
+            @Test
+            @DisplayName("Should throw BadRequestException when bank account already exists")
+            void shouldThrowBadRequestExceptionWhenBankAccountAlreadyExists() {
+                String name = "Nome";
+                String document = "83923422083";
 
-                    when(repository.existsByDocumento(document)).thenReturn(true);
+                when(repository.existsByDocumento(document)).thenReturn(true);
 
-                    BadRequestException exception = assertThrows(BadRequestException.class,
-                            () -> service.store(name, document));
+                BadRequestException exception = assertThrows(BadRequestException.class,
+                        () -> service.store(name, document));
 
-                    String expectedMessage = "Já existe conta para o cliente";
+                String expectedMessage = "Já existe conta para o cliente";
 
-                    String actualMessage = exception.getMessage();
+                String actualMessage = exception.getMessage();
 
-                    assertEquals(expectedMessage, actualMessage);
-                }
+                assertEquals(expectedMessage, actualMessage);
+            }
 
-                @Test
-                @DisplayName("Should throw NullPointerException when account is null")
-                void shouldThrowNullPointerExceptionWhenAccountIsNull() {
-                    String name = "Nome";
-                    String document = "83923422083";
+            @Test
+            @DisplayName("Should throw NullPointerException when account is null")
+            void shouldThrowNullPointerExceptionWhenAccountIsNull() {
+                String name = "Nome";
+                String document = "83923422083";
 
-                    when(repository.existsByDocumento(document)).thenReturn(false);
-                    when(repository.getNextContaValue()).thenReturn(null);
+                when(repository.existsByDocumento(document)).thenReturn(false);
+                when(repository.getNextContaValue()).thenReturn(null);
 
-                    NullPointerException exception = assertThrows(NullPointerException.class,
-                            () -> service.store(name, document));
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.store(name, document));
 
-                    String expectedMessage = "Conta não pode ser nula";
+                String expectedMessage = "Conta não pode ser nula";
 
-                    String actualMessage = exception.getMessage();
+                String actualMessage = exception.getMessage();
 
-                    assertEquals(expectedMessage, actualMessage);
-                }
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
+
+    @Nested
+    class FindByConta {
+        @Nested
+        @DisplayName("Find bank account by account successfully")
+        class Success {
+            @Test
+            @DisplayName("Should find bank account by account")
+            void shouldFindBankAccountByAccount() {
+                Integer account = new Random().nextInt();
+                ContaEntity bankAccount = new ContaEntity();
+
+                when(repository.findByConta(account)).thenReturn(java.util.Optional.of(bankAccount));
+
+                ContaEntity result = service.findByConta(account);
+
+                assertEquals(bankAccount, result);
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to find bank account")
+        class Fail {
+            @Test
+            @DisplayName("Should throw NullPointerException when account is null")
+            void shouldThrowNullPointerExceptionWhenAccountIsNull() {
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.findByConta(null));
+
+                String expectedMessage = "Conta não pode ser nula";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NotFoundException when bank account not found")
+            void shouldThrowNotFoundExceptionWhenBankAccountNotFound() {
+                Integer account = new Random().nextInt();
+
+                when(repository.findByConta(account)).thenReturn(Optional.empty());
+
+                NotFoundException exception = assertThrows(NotFoundException.class, () -> service.findByConta(account));
+
+                String expectedMessage = "Conta não encontrada";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
             }
         }
     }

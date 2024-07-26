@@ -2,6 +2,7 @@ package br.com.exactaworks.exactabank.api.advice;
 
 import br.com.exactaworks.exactabank.api.response.ErrorResponse;
 import br.com.exactaworks.exactabank.exception.BadRequestException;
+import br.com.exactaworks.exactabank.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -57,5 +58,11 @@ public class ControllerAdvice {
     public ResponseEntity<ErrorResponse> handleNullPointerException(NullPointerException ex) {
         log.error("{} {}", INTERNAL_SERVER_ERROR_RESPONSE.traceId(), ex.getMessage());
         return ResponseEntity.internalServerError().body(INTERNAL_SERVER_ERROR_RESPONSE);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundException(NotFoundException ex) {
+        log.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(ex.getMessage()));
     }
 }

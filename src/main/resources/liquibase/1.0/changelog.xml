@@ -190,4 +190,11 @@
             </sql>
         </rollback>
     </changeSet>
+
+    <changeSet id="altera_idx_unique_chave_pix_id_conta" author="brandonsousa">
+        <dropIndex tableName="chave_pix" indexName="ix_chave_pix_id_conta"/>
+        <createIndex tableName="chave_pix" indexName="ix_chave_pix_id_conta">
+            <column name="id_conta"/>
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>

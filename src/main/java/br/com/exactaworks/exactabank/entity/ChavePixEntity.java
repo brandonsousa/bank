@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -46,7 +47,27 @@ public class ChavePixEntity extends AbstractEntity {
     @OneToMany(mappedBy = "idChavePixDestino")
     private Set<TransacaoEntity> transacaos = new LinkedHashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_conta", nullable = false, insertable = false, updatable = false)
     private ContaEntity conta;
+
+    public static ChavePixEntity create(ContaEntity bankAccount, TpChavePixEnum keyType, String key) {
+        Objects.requireNonNull(bankAccount, "Conta não pode ser nula");
+        Objects.requireNonNull(keyType, "Tipo de chave não pode ser nulo");
+
+        if (keyType.equals(TpChavePixEnum.ALEATORIA)) key = UUID.randomUUID().toString();
+
+        Objects.requireNonNull(key, "Chave não pode ser nula");
+        if (key.isBlank()) throw new IllegalArgumentException("Chave não pode ser vazia");
+
+        if (!keyType.isValidValueToType(key)) throw new IllegalArgumentException("Chave inválida para o tipo de chave");
+
+        return ChavePixEntity.builder()
+                .id(UUID.randomUUID())
+                .idConta(bankAccount.getId())
+                .tpChave(keyType)
+                .chave(key)
+                .conta(bankAccount)
+                .build();
+    }
 }

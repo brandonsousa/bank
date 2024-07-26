@@ -3,6 +3,7 @@ package br.com.exactaworks.exactabank.service;
 import br.com.exactaworks.exactabank.dvo.DocumentoDVO;
 import br.com.exactaworks.exactabank.entity.ContaEntity;
 import br.com.exactaworks.exactabank.exception.BadRequestException;
+import br.com.exactaworks.exactabank.exception.NotFoundException;
 import br.com.exactaworks.exactabank.repository.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +39,14 @@ public class BankAccountService {
         ContaEntity bankAccount = ContaEntity.create(name, documentDVO, account);
 
         return repository.save(bankAccount);
+    }
+
+    public ContaEntity findByConta(Integer account) {
+        Objects.requireNonNull(account, "Conta não pode ser nula");
+
+        log.debug("Finding bank account by account {}", account);
+
+        return repository.findByConta(account)
+                .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
     }
 }
