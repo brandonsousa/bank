@@ -1,0 +1,4 @@
+driver: org.postgresql.Driver
+url: jdbc:postgresql://host.docker.internal:5432/exactabank
+username: exacta
+password: r00t

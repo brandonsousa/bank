@@ -11,16 +11,6 @@ services:
       - exactabank:/database/var/lib/postgresql/data
     networks:
       - postgresql-network
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    depends_on:
-      - db
-    ports:
-      - "8080:8080"
-    networks:
-      - postgresql-network
 
 networks:
   postgresql-network:
