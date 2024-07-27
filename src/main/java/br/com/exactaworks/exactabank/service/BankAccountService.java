@@ -7,6 +7,9 @@ import br.com.exactaworks.exactabank.exception.NotFoundException;
 import br.com.exactaworks.exactabank.repository.BankAccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,5 +51,14 @@ public class BankAccountService {
 
         return repository.findByConta(account)
                 .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+    }
+
+    public Page<ContaEntity> findAll(int page, int size, String filter) {
+        Objects.requireNonNull(page, "Página não pode ser nula");
+        Objects.requireNonNull(size, "Tamanho não pode ser nulo");
+
+        log.debug("Finding all bank accounts");
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findByFilter(filter, pageable);
     }
 }
