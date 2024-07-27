@@ -197,4 +197,12 @@
             <column name="id_conta"/>
         </createIndex>
     </changeSet>
+
+    <changeSet id="renomeia_coluca_data_transacao" author="brandonsousa">
+        <renameColumn tableName="transacao" oldColumnName="DT_CRIAÇÃO" newColumnName="DT_CRIACAO"/>
+    </changeSet>
+
+    <changeSet id="renomeia_coluna_valor_transacao" author="brandonsousa">
+        <renameColumn tableName="transacao" oldColumnName="vl_transacao" newColumnName="valor"/>
+    </changeSet>
 </databaseChangeLog>

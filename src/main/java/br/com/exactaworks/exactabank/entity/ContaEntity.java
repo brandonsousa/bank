@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -35,7 +36,8 @@ public class ContaEntity extends AbstractEntity {
     private String documento;
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal saldo;
+    @Builder.Default
+    private BigDecimal saldo = BigDecimal.ZERO;
 
     @Column(nullable = false, unique = true)
     private Integer conta;
@@ -58,5 +60,13 @@ public class ContaEntity extends AbstractEntity {
                 .saldo(BigDecimal.ZERO)
                 .conta(accountNumber)
                 .build();
+    }
+
+    public void incrementAmount(BigDecimal value) {
+        Objects.requireNonNull(value, "Valor não pode ser nulo");
+
+        if (value.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("Valor deve ser maior que zero");
+
+        this.saldo = this.saldo.add(value);
     }
 }

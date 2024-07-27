@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Random;
 
@@ -197,6 +198,80 @@ class BankAccountServiceTest {
                 service.findAll(page, size, filter);
 
                 verify(repository, times(1)).findByFilter(filter, pageable);
+            }
+        }
+    }
+
+    @Nested
+    class UpdateBalance {
+        @Nested
+        @DisplayName("Update balance successfully")
+        class Success {
+            @Test
+            @DisplayName("Should update balance for account")
+            void shouldUpdateBalanceForAccount() {
+                Integer accountId = new Random().nextInt();
+                ContaEntity account = new ContaEntity();
+                BigDecimal value = BigDecimal.TEN;
+
+                when(repository.findByConta(accountId)).thenReturn(Optional.of(account));
+
+                service.updateBalance(accountId, value);
+
+                ArgumentCaptor<ContaEntity> captor = ArgumentCaptor.forClass(ContaEntity.class);
+                verify(repository, times(1)).save(captor.capture());
+
+                ContaEntity updatedAccount = captor.getValue();
+
+                assertEquals(value, updatedAccount.getSaldo());
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to update balance")
+        class Fail {
+            @Test
+            @DisplayName("Should throw NullPointerException when account id is null")
+            void shouldThrowNullPointerExceptionWhenAccountIdIsNull() {
+                BigDecimal value = BigDecimal.TEN;
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.updateBalance(null, value));
+
+                String expectedMessage = "Necessário informar o id da conta";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NullPointerException when value is null")
+            void shouldThrowNullPointerExceptionWhenValueIsNull() {
+                int accountId = new Random().nextInt();
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.updateBalance(accountId, null));
+
+                String expectedMessage = "Necessário informar o valor da transação";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NotFoundException when bank account not found")
+            void shouldThrowNotFoundExceptionWhenBankAccountNotFound() {
+                Integer accountId = new Random().nextInt();
+                BigDecimal value = BigDecimal.TEN;
+
+                when(repository.findByConta(accountId)).thenReturn(Optional.empty());
+
+                NotFoundException exception = assertThrows(NotFoundException.class,
+                        () -> service.updateBalance(accountId, value));
+
+                String expectedMessage = "Conta não encontrada";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
             }
         }
     }

@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Service
@@ -60,5 +61,19 @@ public class BankAccountService {
         log.debug("Finding all bank accounts");
         Pageable pageable = PageRequest.of(page, size);
         return repository.findByFilter(filter, pageable);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void updateBalance(Integer accountId, BigDecimal value) {
+        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(value, "Necessário informar o valor da transação");
+
+        log.debug("Updating balance for account {}", accountId);
+
+        ContaEntity account = findByConta(accountId);
+        account.incrementAmount(value);
+        repository.save(account);
+
+        log.debug("Balance updated for account {}", accountId);
     }
 }

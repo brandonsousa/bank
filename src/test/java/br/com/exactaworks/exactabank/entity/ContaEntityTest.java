@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,6 +34,7 @@ class ContaEntityTest {
                 assertEquals(name, bankAccount.getNome());
                 assertEquals(document.value(), bankAccount.getDocumento());
                 assertEquals(account, bankAccount.getConta());
+                assertEquals(BigDecimal.ZERO, bankAccount.getSaldo());
             }
         }
 
@@ -98,6 +100,74 @@ class ContaEntityTest {
                         () -> ContaEntity.create(name, document, null));
 
                 String expectedMessage = "Conta não pode ser nulo";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
+
+    @Nested
+    class IncrementAmount {
+        @Nested
+        @DisplayName("Increment amount successfully")
+        class Success {
+            @Test
+            @DisplayName("Increment amount with valid value")
+            void incrementAmountWithValidValue() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.TEN;
+
+                bankAccount.incrementAmount(value);
+
+                assertEquals(value, bankAccount.getSaldo());
+            }
+        }
+
+        @Nested
+        class Fail {
+            @Test
+            @DisplayName("Throws NullPointerException when value is null")
+            void throwsNullPointerExceptionWhenValueIsNull() {
+                ContaEntity bankAccount = new ContaEntity();
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> bankAccount.incrementAmount(null));
+
+                String expectedMessage = "Valor não pode ser nulo";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Throws IllegalArgumentException when value is negative")
+            void throwsIllegalArgumentExceptionWhenValueIsNegative() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.valueOf(-10);
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> bankAccount.incrementAmount(value));
+
+                String expectedMessage = "Valor deve ser maior que zero";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Throws IllegalArgumentException when value is zero")
+            void throwsIllegalArgumentExceptionWhenValueIsZero() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.ZERO;
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> bankAccount.incrementAmount(value));
+
+                String expectedMessage = "Valor deve ser maior que zero";
 
                 String actualMessage = exception.getMessage();
 
