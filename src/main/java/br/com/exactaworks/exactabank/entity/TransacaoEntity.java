@@ -71,15 +71,21 @@ public class TransacaoEntity extends AbstractEntity {
         if (value.compareTo(BigDecimal.ZERO) <= 0)
             throw new IllegalArgumentException("Valor da transação deve ser maior que zero");
 
+        UUID accountDestinyId = null;
         if (!type.equals(TpTransacaoEnum.DEPOSITO)) value = value.negate();
         else {
             Objects.requireNonNull(accountDestiny, "Conta destino não pode ser nula");
             value = value.abs();
+            accountDestinyId = accountDestiny.getId();
         }
 
+        UUID pixDestinyId = null;
         if (type.equals(TpTransacaoEnum.PIX)) {
             Objects.requireNonNull(origin, "Conta de origem não pode ser nula");
             Objects.requireNonNull(pixDestiny, "Chave PIX destino não pode ser nula");
+
+            pixDestinyId = pixDestiny.getId();
+            accountDestinyId = pixDestiny.getConta().getId();
         }
 
         if (type.equals(TpTransacaoEnum.SAQUE)) Objects.requireNonNull(origin, "Conta origem não pode ser nula");
@@ -95,8 +101,8 @@ public class TransacaoEntity extends AbstractEntity {
                 .valor(value)
                 .descricao(description)
                 .idContaOrigem(Objects.isNull(origin) ? null : origin.getId())
-                .idChavePixDestino(type.equals(TpTransacaoEnum.PIX) ? pixDestiny.getId() : null)
-                .idContaDestino(Objects.isNull(pixDestiny) ? accountDestiny.getId() : pixDestiny.getIdConta())
+                .idChavePixDestino(pixDestinyId)
+                .idContaDestino(accountDestinyId)
                 .contaOrigem(origin)
                 .chavePixDestino(pixDestiny)
                 .contaDestino(Objects.isNull(pixDestiny) ? accountDestiny : pixDestiny.getConta())
@@ -109,5 +115,9 @@ public class TransacaoEntity extends AbstractEntity {
 
     public static TransacaoEntity pix(ContaEntity origin, ChavePixEntity destiny, BigDecimal value) {
         return create(TpTransacaoEnum.PIX, value, null, origin, destiny, null);
+    }
+
+    public static TransacaoEntity withdraw(ContaEntity account, BigDecimal value) {
+        return create(TpTransacaoEnum.SAQUE, value, null, account, null, null);
     }
 }

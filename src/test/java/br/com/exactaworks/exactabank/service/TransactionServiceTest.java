@@ -208,4 +208,39 @@ class TransactionServiceTest {
             }
         }
     }
+
+    @Nested
+    class Withdraw {
+        @Nested
+        @DisplayName("Should create a withdraw transaction successfully")
+        class Success {
+            @Test
+            @DisplayName("When all parameters are valid")
+            void whenAllParametersAreValid() {
+                Integer accountId = 1;
+                BigDecimal value = BigDecimal.TEN;
+                ContaEntity entity = new ContaEntity();
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(entity);
+
+                service.withdraw(accountId, value);
+
+                ArgumentCaptor<TransacaoEntity> captor = ArgumentCaptor.forClass(TransacaoEntity.class);
+                verify(repository, times(1)).save(captor.capture());
+                verify(bankAccountService, times(1)).decrementAmount(accountId, value);
+
+                TransacaoEntity captured = captor.getValue();
+
+                assertNotNull(captured.getId());
+                assertEquals(TpTransacaoEnum.SAQUE, captured.getTpTransacao());
+                assertEquals(entity.getId(), captured.getIdContaOrigem());
+                assertEquals(entity, captured.getContaOrigem());
+                assertNull(captured.getIdChavePixDestino());
+                assertNull(captured.getChavePixDestino());
+                assertNull(captured.getIdContaDestino());
+                assertNull(captured.getContaDestino());
+                assertEquals(value.negate(), captured.getValor());
+            }
+        }
+    }
 }

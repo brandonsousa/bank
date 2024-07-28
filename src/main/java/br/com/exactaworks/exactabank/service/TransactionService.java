@@ -67,4 +67,20 @@ public class TransactionService {
 
         return savedTransaction;
     }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public TransacaoEntity withdraw(Integer accountId, BigDecimal value) {
+        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(value, "Necessário informar o valor do saque");
+
+        ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
+                .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+
+        bankAccountService.decrementAmount(accountId, value);
+
+        TransacaoEntity transaction = TransacaoEntity.withdraw(account, value);
+        TransacaoEntity savedTransaction = repository.save(transaction);
+
+        return savedTransaction;
+    }
 }

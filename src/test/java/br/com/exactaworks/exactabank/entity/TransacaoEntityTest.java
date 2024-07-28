@@ -10,6 +10,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -28,8 +29,8 @@ class TransacaoEntityTest {
                 BigDecimal value = BigDecimal.TEN;
                 String description = "description";
                 ContaEntity originAccount = new ContaEntity();
-                ChavePixEntity pixDestiny = new ChavePixEntity();
                 ContaEntity destinyAccount = new ContaEntity();
+                ChavePixEntity pixDestiny = ChavePixEntity.builder().conta(destinyAccount).build();
 
                 TransacaoEntity transaction = TransacaoEntity.create(type, value, description, originAccount,
                         pixDestiny, destinyAccount);
@@ -52,8 +53,8 @@ class TransacaoEntityTest {
                 BigDecimal value = BigDecimal.TEN;
                 String description = "description";
                 ContaEntity originAccount = new ContaEntity();
-                ChavePixEntity pixDestiny = new ChavePixEntity();
                 ContaEntity destinyAccount = new ContaEntity();
+                ChavePixEntity pixDestiny = ChavePixEntity.builder().conta(destinyAccount).build();
 
                 TransacaoEntity transaction = TransacaoEntity.create(TpTransacaoEnum.DEPOSITO, value, description,
                         originAccount, pixDestiny, destinyAccount);
@@ -315,7 +316,7 @@ class TransacaoEntityTest {
             void shouldCreatePixTransactionSuccessfully() {
                 BigDecimal value = BigDecimal.TEN;
                 ContaEntity originAccount = new ContaEntity();
-                ContaEntity destinyAccount = new ContaEntity();
+                ContaEntity destinyAccount = ContaEntity.builder().id(UUID.randomUUID()).build();
                 ChavePixEntity pixDestiny = ChavePixEntity.builder().conta(destinyAccount).build();
 
                 TransacaoEntity transaction = TransacaoEntity.pix(originAccount, pixDestiny, value);
@@ -409,6 +410,94 @@ class TransacaoEntityTest {
 
                 IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                         () -> TransacaoEntity.pix(originAccount, pixDestiny, value));
+
+                String expectedMessage = "Valor da transação deve ser maior que zero";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
+
+    @Nested
+    class Withdraw {
+        @Nested
+        @DisplayName("Success to create a SAQUE transaction")
+        class Success {
+            @Test
+            @DisplayName("Should create SAQUE transaction successfully")
+            void shouldCreateWithdrawTransactionSuccessfully() {
+                BigDecimal value = BigDecimal.TEN;
+                ContaEntity originAccount = ContaEntity.builder().id(UUID.randomUUID()).build();
+
+                TransacaoEntity transaction = TransacaoEntity.withdraw(originAccount, value);
+
+                assertEquals(TpTransacaoEnum.SAQUE, transaction.getTpTransacao());
+                assertEquals(value.negate(), transaction.getValor());
+                assertNull(transaction.getDescricao());
+                assertEquals(originAccount.getId(), transaction.getIdContaOrigem());
+                assertNull(transaction.getIdChavePixDestino());
+                assertNull(transaction.getIdContaDestino());
+                assertEquals(originAccount, transaction.getContaOrigem());
+                assertNull(transaction.getChavePixDestino());
+                assertNull(transaction.getContaDestino());
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to create a SAQUE transaction")
+        class Fail {
+            @Test
+            @DisplayName("Should throw NullPointerException when origin account is null")
+            void shouldThrowNullPointerExceptionWhenOriginAccountIsNull() {
+                BigDecimal value = BigDecimal.TEN;
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> TransacaoEntity.withdraw(null, value));
+
+                String expectedMessage = "Conta origem não pode ser nula";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NullPointerException when value is null")
+            void shouldThrowNullPointerExceptionWhenValueIsNull() {
+                ContaEntity originAccount = new ContaEntity();
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> TransacaoEntity.withdraw(originAccount, null));
+
+                String expectedMessage = "Valor da transação não pode ser nulo";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw IllegalArgumentException when value of transaction is equal to zero")
+            void shouldThrowIllegalArgumentExceptionWhenValueOfTransactionIsEqualToZero() {
+                BigDecimal value = BigDecimal.ZERO;
+                ContaEntity originAccount = new ContaEntity();
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> TransacaoEntity.withdraw(originAccount, value));
+
+                String expectedMessage = "Valor da transação deve ser maior que zero";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw IllegalArgumentException when value of transaction is less than zero")
+            void shouldThrowIllegalArgumentExceptionWhenValueOfTransactionIsLessThanZero() {
+                BigDecimal value = BigDecimal.valueOf(-1);
+                ContaEntity originAccount = new ContaEntity();
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> TransacaoEntity.withdraw(originAccount, value));
 
                 String expectedMessage = "Valor da transação deve ser maior que zero";
                 String actualMessage = exception.getMessage();

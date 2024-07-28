@@ -3,8 +3,10 @@ package br.com.exactaworks.exactabank.api.resource;
 import br.com.exactaworks.exactabank.api.mapper.TransactionMapper;
 import br.com.exactaworks.exactabank.api.request.transaction.DepositStoreRequest;
 import br.com.exactaworks.exactabank.api.request.transaction.PixStoreRequest;
+import br.com.exactaworks.exactabank.api.request.transaction.WithdrawStoreRequest;
 import br.com.exactaworks.exactabank.api.response.transaction.DepositStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.PixStoreResponse;
+import br.com.exactaworks.exactabank.api.response.transaction.WithdrawStoreResponse;
 import br.com.exactaworks.exactabank.entity.TransacaoEntity;
 import br.com.exactaworks.exactabank.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +45,15 @@ public class TransactionResource {
         TransacaoEntity entity = service.pix(request.contaOrigem(), request.tipoChavePix(), request.chavePixDestino(),
                 request.valor());
         PixStoreResponse response = mapper.fromTransacaoEntityPix(entity);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Sacar", description = "Saca um valor de uma conta bancária")
+    @Transactional
+    @PostMapping("/withdraw")
+    public ResponseEntity<WithdrawStoreResponse> withdraw(@RequestBody @Valid WithdrawStoreRequest request) {
+        TransacaoEntity entity = service.withdraw(request.contaOrigem(), request.valor());
+        WithdrawStoreResponse response = mapper.fromTransacaoEntityWithdraw(entity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }
