@@ -43,4 +43,14 @@ public class PixService {
 
         return repository.save(pixKey);
     }
+
+    public ChavePixEntity findByTypeAndKeyWithAccount(TpChavePixEnum type, String key) {
+        Objects.requireNonNull(type, "Tipo de chave não pode ser nulo");
+        Objects.requireNonNull(key, "Chave não pode ser nula");
+
+        log.debug("Finding pix key by type {} and key {}", type, key);
+
+        return repository.findByTpChaveAndChave(type, key)
+                .orElseThrow(() -> new NotFoundException("Chave pix não encontrada"));
+    }
 }

@@ -1,8 +1,11 @@
 package br.com.exactaworks.exactabank.service;
 
+import br.com.exactaworks.exactabank.entity.ChavePixEntity;
 import br.com.exactaworks.exactabank.entity.ContaEntity;
 import br.com.exactaworks.exactabank.entity.TransacaoEntity;
+import br.com.exactaworks.exactabank.enums.TpChavePixEnum;
 import br.com.exactaworks.exactabank.enums.TpTransacaoEnum;
+import br.com.exactaworks.exactabank.exception.BadRequestException;
 import br.com.exactaworks.exactabank.exception.NotFoundException;
 import br.com.exactaworks.exactabank.repository.TransactionRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -30,6 +34,8 @@ class TransactionServiceTest {
     private TransactionRepository repository;
     @Mock
     private BankAccountService bankAccountService;
+    @Mock
+    private PixService pixService;
 
     @InjectMocks
     private TransactionService service;
@@ -132,6 +138,73 @@ class TransactionServiceTest {
                 String actualMessage = exception.getMessage();
 
                 assert (actualMessage.contains(expectedMessage));
+            }
+        }
+    }
+
+    @Nested
+    class Pix {
+        @Nested
+        @DisplayName("Should create a pix transaction successfully")
+        class Success {
+            @Test
+            @DisplayName("When all parameters are valid")
+            void whenAllParametersAreValid() {
+                int accountId = new Random().nextInt();
+                BigDecimal value = BigDecimal.TEN;
+                TpChavePixEnum pixType = TpChavePixEnum.EMAIL;
+                String pixKey = "email@email.com";
+                ContaEntity account = ContaEntity.builder().conta(accountId).build();
+                ChavePixEntity pix = ChavePixEntity.builder()
+                        .conta(ContaEntity.builder().conta(new Random().nextInt()).build()).build();
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(account);
+                when(pixService.findByTypeAndKeyWithAccount(pixType, pixKey)).thenReturn(pix);
+
+                service.pix(accountId, pixType, pixKey, value);
+
+                ArgumentCaptor<TransacaoEntity> transacaoEntityArgumentCaptor = ArgumentCaptor.forClass(
+                        TransacaoEntity.class);
+                verify(bankAccountService, times(1)).decrementAmount(accountId, value);
+                verify(repository, times(1)).save(transacaoEntityArgumentCaptor.capture());
+                verify(bankAccountService, times(1)).incrementAmount(pix.getConta().getConta(), value);
+
+                TransacaoEntity captured = transacaoEntityArgumentCaptor.getValue();
+
+                assertNotNull(captured.getId());
+                assertEquals(TpTransacaoEnum.PIX, captured.getTpTransacao());
+                assertEquals(account.getId(), captured.getIdContaOrigem());
+                assertEquals(account, captured.getContaOrigem());
+                assertEquals(pix.getId(), captured.getIdChavePixDestino());
+                assertEquals(pix, captured.getChavePixDestino());
+                assertEquals(pix.getConta().getId(), captured.getIdContaDestino());
+                assertEquals(pix.getConta(), captured.getContaDestino());
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to create a pix transaction")
+        class Fail {
+            @Test
+            @DisplayName("When pix and account are the same should throw a BadRequestException")
+            void whenPixAndAccountAreTheSameShouldThrowABadRequestException() {
+                int accountId = new Random().nextInt();
+                BigDecimal value = BigDecimal.TEN;
+                TpChavePixEnum pixType = TpChavePixEnum.EMAIL;
+                String pixKey = "email@email.com";
+                ContaEntity account = ContaEntity.builder().conta(accountId).build();
+                ChavePixEntity pix = ChavePixEntity.builder().conta(account).build();
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(account);
+                when(pixService.findByTypeAndKeyWithAccount(pixType, pixKey)).thenReturn(pix);
+
+                BadRequestException exception = assertThrows(BadRequestException.class,
+                        () -> service.pix(accountId, pixType, pixKey, value));
+
+                String expectedMessage = "Não é possível realizar uma transação entre a mesma conta";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
             }
         }
     }

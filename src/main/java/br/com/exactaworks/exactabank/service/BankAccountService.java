@@ -64,7 +64,7 @@ public class BankAccountService {
     }
 
     @Transactional(propagation = Propagation.REQUIRED)
-    public void updateBalance(Integer accountId, BigDecimal value) {
+    public void incrementAmount(Integer accountId, BigDecimal value) {
         Objects.requireNonNull(accountId, "Necessário informar o id da conta");
         Objects.requireNonNull(value, "Necessário informar o valor da transação");
 
@@ -72,6 +72,20 @@ public class BankAccountService {
 
         ContaEntity account = findByConta(accountId);
         account.incrementAmount(value);
+        repository.save(account);
+
+        log.debug("Balance updated for account {}", accountId);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void decrementAmount(Integer accountId, BigDecimal value) {
+        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(value, "Necessário informar o valor da transação");
+
+        log.debug("Updating balance for account {}", accountId);
+
+        ContaEntity account = findByConta(accountId);
+        account.decrementAmount(value);
         repository.save(account);
 
         log.debug("Balance updated for account {}", accountId);

@@ -99,11 +99,15 @@ public class TransacaoEntity extends AbstractEntity {
                 .idContaDestino(Objects.isNull(pixDestiny) ? accountDestiny.getId() : pixDestiny.getIdConta())
                 .contaOrigem(origin)
                 .chavePixDestino(pixDestiny)
-                .contaDestino(accountDestiny)
+                .contaDestino(Objects.isNull(pixDestiny) ? accountDestiny : pixDestiny.getConta())
                 .build();
     }
 
     public static TransacaoEntity deposit(ContaEntity account, BigDecimal value) {
         return create(TpTransacaoEnum.DEPOSITO, value, null, null, null, account);
+    }
+
+    public static TransacaoEntity pix(ContaEntity origin, ChavePixEntity destiny, BigDecimal value) {
+        return create(TpTransacaoEnum.PIX, value, null, origin, destiny, null);
     }
 }

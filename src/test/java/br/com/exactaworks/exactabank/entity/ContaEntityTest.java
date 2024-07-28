@@ -175,4 +175,89 @@ class ContaEntityTest {
             }
         }
     }
+
+    @Nested
+    class DecrementAmount {
+        @Nested
+        @DisplayName("Decrement amount successfully")
+        class Success {
+            @Test
+            @DisplayName("Decrement amount with valid value")
+            void decrementAmountWithValidValue() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.TEN;
+                bankAccount.incrementAmount(BigDecimal.valueOf(20));
+
+                bankAccount.decrementAmount(value);
+
+                assertEquals(BigDecimal.TEN, bankAccount.getSaldo());
+            }
+        }
+
+        @Nested
+        class Fail {
+            @Test
+            @DisplayName("Throws NullPointerException when value is null")
+            void throwsNullPointerExceptionWhenValueIsNull() {
+                ContaEntity bankAccount = new ContaEntity();
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> bankAccount.decrementAmount(null));
+
+                String expectedMessage = "Valor não pode ser nulo";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Throws IllegalArgumentException when value is negative")
+            void throwsIllegalArgumentExceptionWhenValueIsNegative() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.valueOf(-10);
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> bankAccount.decrementAmount(value));
+
+                String expectedMessage = "Valor deve ser maior que zero";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Throws IllegalArgumentException when value is zero")
+            void throwsIllegalArgumentExceptionWhenValueIsZero() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.ZERO;
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> bankAccount.decrementAmount(value));
+
+                String expectedMessage = "Valor deve ser maior que zero";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Throws IllegalArgumentException when value is greater than saldo")
+            void throwsIllegalArgumentExceptionWhenValueIsGreaterThanSaldo() {
+                ContaEntity bankAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.TEN;
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> bankAccount.decrementAmount(value));
+
+                String expectedMessage = "Saldo insuficiente";
+
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
 }

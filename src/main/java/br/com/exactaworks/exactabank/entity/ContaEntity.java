@@ -69,4 +69,13 @@ public class ContaEntity extends AbstractEntity {
 
         this.saldo = this.saldo.add(value);
     }
+
+    public void decrementAmount(BigDecimal value) {
+        Objects.requireNonNull(value, "Valor não pode ser nulo");
+
+        if (value.compareTo(BigDecimal.ZERO) <= 0) throw new IllegalArgumentException("Valor deve ser maior que zero");
+        if (this.saldo.compareTo(value) < 0) throw new IllegalArgumentException("Saldo insuficiente");
+
+        this.saldo = this.saldo.subtract(value);
+    }
 }
