@@ -9,6 +9,9 @@ import br.com.exactaworks.exactabank.exception.NotFoundException;
 import br.com.exactaworks.exactabank.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +28,16 @@ public class TransactionService {
     private final BankAccountService bankAccountService;
     private final PixService pixService;
 
+    private static final String ACCOUNT_ID_MUST_BE_INFORMED = "Necessário informar o id da conta";
+    private static final String ACCOUNT_NOT_FOUND = "Conta não encontrada";
+
     @Transactional(propagation = Propagation.REQUIRED)
     public TransacaoEntity deposit(Integer accountId, BigDecimal value) {
-        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(accountId, ACCOUNT_ID_MUST_BE_INFORMED);
         Objects.requireNonNull(value, "Necessário informar o valor do depósito");
 
         ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
-                .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+                .orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_FOUND));
 
         TransacaoEntity transaction = TransacaoEntity.deposit(account, value);
         TransacaoEntity savedTransaction = repository.save(transaction);
@@ -43,13 +49,13 @@ public class TransactionService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     public TransacaoEntity pix(Integer accountId, TpChavePixEnum pixType, String pixKey, BigDecimal value) {
-        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(accountId, ACCOUNT_ID_MUST_BE_INFORMED);
         Objects.requireNonNull(pixType, "Necessário informar o tipo da chave pix");
         Objects.requireNonNull(pixKey, "Necessário informar a chave pix");
         Objects.requireNonNull(value, "Necessário informar o valor da transação");
 
         ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
-                .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+                .orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_FOUND));
         ChavePixEntity pix = Optional.ofNullable(pixService.findByTypeAndKeyWithAccount(pixType, pixKey))
                 .orElseThrow(() -> new NotFoundException("Chave pix não encontrada"));
 
@@ -70,17 +76,28 @@ public class TransactionService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     public TransacaoEntity withdraw(Integer accountId, BigDecimal value) {
-        Objects.requireNonNull(accountId, "Necessário informar o id da conta");
+        Objects.requireNonNull(accountId, ACCOUNT_ID_MUST_BE_INFORMED);
         Objects.requireNonNull(value, "Necessário informar o valor do saque");
 
         ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
-                .orElseThrow(() -> new NotFoundException("Conta não encontrada"));
+                .orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_FOUND));
 
         bankAccountService.decrementAmount(accountId, value);
 
         TransacaoEntity transaction = TransacaoEntity.withdraw(account, value);
-        TransacaoEntity savedTransaction = repository.save(transaction);
+        return repository.save(transaction);
+    }
 
-        return savedTransaction;
+    public Page<TransacaoEntity> findAllByConta(Integer accountId, Integer page, Integer size) {
+        Objects.requireNonNull(accountId, ACCOUNT_ID_MUST_BE_INFORMED);
+        Objects.requireNonNull(page, "Necessário informar o número da página");
+        Objects.requireNonNull(size, "Necessário informar o tamanho da página");
+
+        ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
+                .orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_FOUND));
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        return repository.findAllByIdContaOrigemOrIdContaDestino(account.getId(), account.getId(), pageable);
     }
 }

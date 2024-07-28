@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Random;
@@ -24,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -240,6 +242,34 @@ class TransactionServiceTest {
                 assertNull(captured.getIdContaDestino());
                 assertNull(captured.getContaDestino());
                 assertEquals(value.negate(), captured.getValor());
+            }
+        }
+    }
+
+    @Nested
+    class findAllByConta {
+        @Nested
+        class Success {
+            @Test
+            @DisplayName("When all parameters are valid")
+            void whenAllParametersAreValid() {
+                Integer accountId = 1;
+                Integer page = 0;
+                Integer size = 10;
+                ContaEntity entity = new ContaEntity();
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(entity);
+
+                service.findAllByConta(accountId, page, size);
+
+                ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+                verify(repository, times(1)).findAllByIdContaOrigemOrIdContaDestino(eq(entity.getId()),
+                        eq(entity.getId()), captor.capture());
+
+                Pageable captured = captor.getValue();
+
+                assertEquals(page, captured.getPageNumber());
+                assertEquals(size, captured.getPageSize());
             }
         }
     }

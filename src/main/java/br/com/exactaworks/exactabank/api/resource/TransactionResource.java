@@ -6,19 +6,25 @@ import br.com.exactaworks.exactabank.api.request.transaction.PixStoreRequest;
 import br.com.exactaworks.exactabank.api.request.transaction.WithdrawStoreRequest;
 import br.com.exactaworks.exactabank.api.response.transaction.DepositStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.PixStoreResponse;
+import br.com.exactaworks.exactabank.api.response.transaction.TransactionResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.WithdrawStoreResponse;
 import br.com.exactaworks.exactabank.entity.TransacaoEntity;
 import br.com.exactaworks.exactabank.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -55,5 +61,20 @@ public class TransactionResource {
         TransacaoEntity entity = service.withdraw(request.contaOrigem(), request.valor());
         WithdrawStoreResponse response = mapper.fromTransacaoEntityWithdraw(entity);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Transações", description = "Lista todas as transações por conta")
+    @GetMapping
+    public ResponseEntity<PagedModel<TransactionResponse>> list(
+            @Parameter(description = "Número da página") @RequestParam(required = false, defaultValue = "0")
+            Integer pagina,
+            @Parameter(description = "Quantidade de registros por página")
+            @RequestParam(required = false, defaultValue = "10") Integer tamanho,
+            @Parameter(description = "Número da conta") @RequestParam Integer conta) {
+        Page<TransacaoEntity> transactions = service.findAllByConta(conta, pagina, tamanho);
+
+        PagedModel<TransactionResponse> response = mapper.fromTransacaoPage(transactions, conta);
+
+        return ResponseEntity.ok(response);
     }
 }
