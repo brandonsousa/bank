@@ -100,4 +100,18 @@ public class TransactionService {
 
         return repository.findAllByIdContaOrigemOrIdContaDestino(account.getId(), account.getId(), pageable);
     }
+
+    public TransacaoEntity recharge(Integer accountId, String phone, BigDecimal value) {
+        Objects.requireNonNull(accountId, ACCOUNT_ID_MUST_BE_INFORMED);
+        Objects.requireNonNull(phone, "Necessário informar o número do telefone");
+        Objects.requireNonNull(value, "Necessário informar o valor da recarga");
+
+        ContaEntity account = Optional.ofNullable(bankAccountService.findByConta(accountId))
+                .orElseThrow(() -> new NotFoundException(ACCOUNT_NOT_FOUND));
+
+        bankAccountService.decrementAmount(accountId, value);
+        TransacaoEntity transaction = TransacaoEntity.recharge(account, value, phone);
+
+        return repository.save(transaction);
+    }
 }

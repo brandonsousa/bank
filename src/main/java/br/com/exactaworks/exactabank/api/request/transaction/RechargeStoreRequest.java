@@ -1,20 +1,16 @@
 package br.com.exactaworks.exactabank.api.request.transaction;
 
-import br.com.exactaworks.exactabank.enums.TpChavePixEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public record PixStoreRequest(
+public record RechargeStoreRequest(
         @NotNull(message = "O campo 'contaOrigem' é obrigatório")
         Integer contaOrigem,
-        @NotNull(message = "O campo 'tipoChavePix' é obrigatório")
-        TpChavePixEnum tipoChavePix,
-        @NotBlank(message = "O campo 'chavePixDestino' é obrigatório")
-        String chavePixDestino,
+        @NotBlank(message = "O campo 'numeroTelefone' é obrigatório")
+        String numeroTelefone,
         @NotNull(message = "O campo 'valor' é obrigatório")
         BigDecimal valor
 ) {
-
 }

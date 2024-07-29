@@ -273,4 +273,111 @@ class TransactionServiceTest {
             }
         }
     }
+
+    @Nested
+    class Recharge {
+        @Nested
+        @DisplayName("Should create a recharge transaction successfully")
+        class Success {
+            @Test
+            @DisplayName("When all parameters are valid")
+            void whenAllParametersAreValid() {
+                Integer accountId = 1;
+                BigDecimal value = BigDecimal.TEN;
+                String phone = "11999999999";
+                ContaEntity entity = new ContaEntity();
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(entity);
+
+                service.recharge(accountId, phone, value);
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to create a recharge transaction")
+        class Fail {
+            @Test
+            @DisplayName("When account id is null should throw an NullPointerException")
+            void whenAccountIdIsNullShouldThrowAnNullPointerException() {
+                BigDecimal value = BigDecimal.TEN;
+                String phone = "123456789";
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.recharge(null, phone, value));
+
+                String expectedMessage = "Necessário informar o id da conta";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("When phone is null should throw an NullPointerException")
+            void whenPhoneIsNullShouldThrowAnNullPointerException() {
+                Integer accountId = 1;
+                BigDecimal value = BigDecimal.TEN;
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.recharge(accountId, null, value));
+
+                String expectedMessage = "Necessário informar o número do telefone";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("When value is null should throw an NullPointerException")
+            void whenValueIsNullShouldThrowAnNullPointerException() {
+                Integer accountId = 1;
+                String phone = "123456789";
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> service.recharge(accountId, phone, null));
+
+                String expectedMessage = "Necessário informar o valor da recarga";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("When bankAccountService.findByConta throws an NotFoundException should throw a " +
+                    "NotFoundException")
+            void whenBankAccountServiceThrowsAnNotFoundExceptionShouldThrowANotFoundException() {
+                Integer accountId = 1;
+                BigDecimal value = BigDecimal.TEN;
+                String phone = "123456789";
+
+                when(bankAccountService.findByConta(accountId)).thenThrow(
+                        new NotFoundException("Conta não encontrada"));
+
+                NotFoundException exception = assertThrows(NotFoundException.class,
+                        () -> service.recharge(accountId, phone, value));
+
+                String expectedMessage = "Conta não encontrada";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("When bankAccountService.findByConta returns null should throw a NotFoundException")
+            void whenBankAccountServiceFindByContaReturnsNullShouldThrowANotFoundException() {
+                Integer accountId = 1;
+                BigDecimal value = BigDecimal.TEN;
+                String phone = "123456789";
+
+                when(bankAccountService.findByConta(accountId)).thenReturn(null);
+
+                NotFoundException exception = assertThrows(NotFoundException.class,
+                        () -> service.recharge(accountId, phone, value));
+
+                String expectedMessage = "Conta não encontrada";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
 }

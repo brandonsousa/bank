@@ -27,7 +27,7 @@ class TransacaoEntityTest {
             @DisplayName("Should create transaction successfully")
             void shouldCreateTransactionSuccessfully(TpTransacaoEnum type) {
                 BigDecimal value = BigDecimal.TEN;
-                String description = "description";
+                String description = "11999999999";
                 ContaEntity originAccount = new ContaEntity();
                 ContaEntity destinyAccount = new ContaEntity();
                 ChavePixEntity pixDestiny = ChavePixEntity.builder().conta(destinyAccount).build();
@@ -500,6 +500,130 @@ class TransacaoEntityTest {
                         () -> TransacaoEntity.withdraw(originAccount, value));
 
                 String expectedMessage = "Valor da transação deve ser maior que zero";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+        }
+    }
+
+    @Nested
+    class Recharge {
+        @Nested
+        @DisplayName("Success to create a RECARGA transaction")
+        class Success {
+            @Test
+            @DisplayName("Should create RECARGA transaction successfully")
+            void shouldCreateRechargeTransactionSuccessfully() {
+                BigDecimal value = BigDecimal.TEN;
+                String phone = "11999999999";
+                ContaEntity originAccount = ContaEntity.builder().id(UUID.randomUUID()).build();
+
+                TransacaoEntity transaction = TransacaoEntity.recharge(originAccount, value, phone);
+
+                assertEquals(TpTransacaoEnum.RECARGA, transaction.getTpTransacao());
+                assertEquals(value.negate(), transaction.getValor());
+                assertEquals(phone, transaction.getDescricao());
+                assertEquals(originAccount.getId(), transaction.getIdContaOrigem());
+                assertNull(transaction.getIdChavePixDestino());
+                assertNull(transaction.getIdContaDestino());
+                assertEquals(originAccount, transaction.getContaOrigem());
+                assertNull(transaction.getChavePixDestino());
+                assertNull(transaction.getContaDestino());
+            }
+        }
+
+        @Nested
+        @DisplayName("Fail to create a RECARGA transaction")
+        class Fail {
+            @Test
+            @DisplayName("Should throw NullPointerException when origin account is null")
+            void shouldThrowNullPointerExceptionWhenOriginAccountIsNull() {
+                BigDecimal value = BigDecimal.TEN;
+                String description = "description";
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> TransacaoEntity.recharge(null, value, description));
+
+                String expectedMessage = "Conta origem não pode ser nula";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NullPointerException when value is null")
+            void shouldThrowNullPointerExceptionWhenValueIsNull() {
+                ContaEntity originAccount = new ContaEntity();
+                String description = "description";
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> TransacaoEntity.recharge(originAccount, null, description));
+
+                String expectedMessage = "Valor da transação não pode ser nulo";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw NullPointerException when phone is null")
+            void shouldThrowNullPointerExceptionWhenPhoneIsNull() {
+                ContaEntity originAccount = new ContaEntity();
+                BigDecimal value = BigDecimal.TEN;
+
+                NullPointerException exception = assertThrows(NullPointerException.class,
+                        () -> TransacaoEntity.recharge(originAccount, value, null));
+
+                String expectedMessage = "Número de telefone não pode ser nulo";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw IllegalArgumentException when value of transaction is equal to zero")
+            void shouldThrowIllegalArgumentExceptionWhenValueOfTransactionIsEqualToZero() {
+                BigDecimal value = BigDecimal.ZERO;
+                ContaEntity originAccount = new ContaEntity();
+                String description = "description";
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> TransacaoEntity.recharge(originAccount, value, description));
+
+                String expectedMessage = "Valor da transação deve ser maior que zero";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw IllegalArgumentException when value of transaction is less than zero")
+            void shouldThrowIllegalArgumentExceptionWhenValueOfTransactionIsLessThanZero() {
+                BigDecimal value = BigDecimal.valueOf(-1);
+                ContaEntity originAccount = new ContaEntity();
+                String description = "description";
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> TransacaoEntity.recharge(originAccount, value, description));
+
+                String expectedMessage = "Valor da transação deve ser maior que zero";
+                String actualMessage = exception.getMessage();
+
+                assertEquals(expectedMessage, actualMessage);
+            }
+
+            @Test
+            @DisplayName("Should throw IllegalArgumentException when phone is invalid")
+            void shouldThrowIllegalArgumentExceptionWhenPhoneIsInvalid() {
+                BigDecimal value = BigDecimal.TEN;
+                ContaEntity originAccount = new ContaEntity();
+                String description = "12345";
+
+                IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+                        () -> TransacaoEntity.recharge(originAccount, value, description));
+
+                String expectedMessage = "Número de telefone inválido";
                 String actualMessage = exception.getMessage();
 
                 assertEquals(expectedMessage, actualMessage);

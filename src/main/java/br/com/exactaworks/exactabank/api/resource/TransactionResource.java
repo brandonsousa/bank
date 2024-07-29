@@ -3,15 +3,21 @@ package br.com.exactaworks.exactabank.api.resource;
 import br.com.exactaworks.exactabank.api.mapper.TransactionMapper;
 import br.com.exactaworks.exactabank.api.request.transaction.DepositStoreRequest;
 import br.com.exactaworks.exactabank.api.request.transaction.PixStoreRequest;
+import br.com.exactaworks.exactabank.api.request.transaction.RechargeStoreRequest;
 import br.com.exactaworks.exactabank.api.request.transaction.WithdrawStoreRequest;
+import br.com.exactaworks.exactabank.api.response.ErrorResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.DepositStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.PixStoreResponse;
+import br.com.exactaworks.exactabank.api.response.transaction.RechargeStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.TransactionResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.WithdrawStoreResponse;
 import br.com.exactaworks.exactabank.entity.TransacaoEntity;
 import br.com.exactaworks.exactabank.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,5 +82,19 @@ public class TransactionResource {
         PagedModel<TransactionResponse> response = mapper.fromTransacaoPage(transactions, conta);
 
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "Recarga de celular", description = "Recarrega um celular", responses = {
+            @ApiResponse(responseCode = "201", content = @Content(schema = @Schema(implementation =
+                    RechargeStoreResponse.class))),
+            @ApiResponse(description = "Resposta para todos os casos de error", content = @Content(schema =
+            @Schema(implementation = ErrorResponse.class))),
+    })
+    @Transactional
+    @PostMapping("/recharge")
+    public ResponseEntity<RechargeStoreResponse> recharge(@RequestBody @Valid RechargeStoreRequest request) {
+        TransacaoEntity entity = service.recharge(request.contaOrigem(), request.numeroTelefone(), request.valor());
+        RechargeStoreResponse response = mapper.fromTransacaoEntityRecharge(entity);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

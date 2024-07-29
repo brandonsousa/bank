@@ -19,6 +19,7 @@ import lombok.experimental.SuperBuilder;
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Entity
 @Table(name = "transacao", indexes = {
@@ -93,6 +94,12 @@ public class TransacaoEntity extends AbstractEntity {
         if (type.equals(TpTransacaoEnum.RECARGA)) {
             Objects.requireNonNull(origin, "Conta origem não pode ser nula");
             Objects.requireNonNull(description, "Número de telefone não pode ser nulo");
+
+            final Pattern PHONE_PATTERN = Pattern.compile("^\\d{11}$");
+            String cleaned = description.replaceAll("[^0-9]", "");
+            if (!PHONE_PATTERN.matcher(cleaned).matches() && !Objects.equals(cleaned.length(), 11))
+                throw new IllegalArgumentException("Número de telefone inválido");
+
         }
 
         return TransacaoEntity.builder()
@@ -119,5 +126,9 @@ public class TransacaoEntity extends AbstractEntity {
 
     public static TransacaoEntity withdraw(ContaEntity account, BigDecimal value) {
         return create(TpTransacaoEnum.SAQUE, value, null, account, null, null);
+    }
+
+    public static TransacaoEntity recharge(ContaEntity account, BigDecimal value, String phone) {
+        return create(TpTransacaoEnum.RECARGA, value, phone, account, null, null);
     }
 }

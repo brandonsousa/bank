@@ -2,6 +2,7 @@ package br.com.exactaworks.exactabank.api.mapper;
 
 import br.com.exactaworks.exactabank.api.response.transaction.DepositStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.PixStoreResponse;
+import br.com.exactaworks.exactabank.api.response.transaction.RechargeStoreResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.TransactionResponse;
 import br.com.exactaworks.exactabank.api.response.transaction.WithdrawStoreResponse;
 import br.com.exactaworks.exactabank.entity.TransacaoEntity;
@@ -50,4 +51,10 @@ public interface TransactionMapper {
 
         return new PagedModel<>(new PageImpl<>(dtoList, entityPage.getPageable(), entityPage.getTotalElements()));
     }
+
+
+    @Mapping(source = "entity.contaOrigem.conta", target = "contaOrigem")
+    @Mapping(source = "entity.descricao", target = "numeroTelefone")
+    @Mapping(source = "entity.valor", target = "valor")
+    RechargeStoreResponse fromTransacaoEntityRecharge(TransacaoEntity entity);
 }
