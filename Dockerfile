@@ -16,7 +16,7 @@ COPY . .
 
 RUN ./mvnw clean install
 
-RUN cp target/exactabank-*.jar app.jar
+RUN cp target/bank-*.jar app.jar
 
 COPY entrypoint.sh /opt/app/entrypoint.sh
 RUN chmod +x /opt/app/entrypoint.sh

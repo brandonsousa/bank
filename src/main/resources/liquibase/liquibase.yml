@@ -1,4 +1,4 @@
 driver: org.postgresql.Driver
-url: jdbc:postgresql://localhost:5432/exactabank
-username: exacta
+url: jdbc:postgresql://localhost:5432/bank
+username: bank
 password: r00t
